@@ -1,0 +1,34 @@
+# Cloud Build YAML file
+steps:
+  # Install dependencies
+  - name: 'node:16.15.0-bullseye-slim'
+    entrypoint: npm
+    args: ['install']
+
+  - name: 'node:16.15.0-bullseye-slim'
+    entrypoint: node
+    args: ['-v']
+
+  # Build the TypeScript project
+  - name: 'node:16.15.0-bullseye-slim'
+    entrypoint: npm
+    args: ['run', 'build']
+
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/cogent-426809/cogent-repository:$COMMIT_SHA', '.']
+
+  # Push the Docker image to the Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-central1-docker.pkg.dev/cogent-426809/cogent-repository:$COMMIT_SHA']
+
+# Specify the Docker image to use for the build
+images:
+  - 'us-central1-docker.pkg.dev/cogent-426809/cogent-repository:$COMMIT_SHA'
+
+# Use the commit SHA as the Docker image tag
+substitutions:
+  _COMMIT_SHA: '${COMMIT_SHA}'
+
+# Specify the logs bucket
+logsBucket: 'gs://cogent-426809_cloudbuild/source'
